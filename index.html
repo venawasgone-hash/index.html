@@ -101,7 +101,7 @@ button {
 <div id="popup">
   <div class="box">
     <h2>Wanna play Rivals on Roblox with your girl? 💙</h2>
-    <button onclick="startGame()">YES</button>
+    <button id="startBtn">YES</button>
   </div>
 </div>
 
@@ -148,20 +148,21 @@ const game = document.getElementById("game");
 const character = document.getElementById("character");
 const progress = document.getElementById("progress");
 
-// --- TOUCH MOVEMENT ---
 let touchX = null;
+
+// --- TOUCH MOVEMENT ---
 game.addEventListener("touchstart", e => {
+  if(!e.touches) return;
   touchX = e.touches[0].clientX;
   moveCharacter(touchX);
   shootBullet();
 });
 game.addEventListener("touchmove", e => {
+  if(!e.touches) return;
   touchX = e.touches[0].clientX;
   moveCharacter(touchX);
 });
-game.addEventListener("touchend", e => {
-  touchX = null;
-});
+game.addEventListener("touchend", e => { touchX = null; });
 
 function moveCharacter(x) {
   const halfWidth = character.offsetWidth / 2;
@@ -171,13 +172,13 @@ function moveCharacter(x) {
   character.style.left = newX + "px";
 }
 
-// --- START GAME ---
-function startGame() {
+// --- START BUTTON FIX ---
+document.getElementById("startBtn").addEventListener("click", () => {
   document.getElementById("popup").style.display = "none";
   game.style.display = "block";
   spawnHearts();
   animateGame();
-}
+});
 
 // --- SPAWN HEARTS ---
 function spawnHearts() {
@@ -246,5 +247,81 @@ function animateGame() {
     });
 
     if (y < -20) {
-      bullets[i].re
+      bullets[i].remove();
+      bullets.splice(i,1);
+    }
+  });
+}
+
+// --- COLLISION DETECTION ---
+function collision(a, b) {
+  const rect1 = a.getBoundingClientRect();
+  const rect2 = b.getBoundingClientRect();
+  return !(
+    rect1.top > rect2.bottom ||
+    rect1.bottom < rect2.top ||
+    rect1.right < rect2.left ||
+    rect1.left > rect2.right
+  );
+}
+
+function updateProgress() {
+  progress.innerText = `Progress: ${score} / ${goal}`;
+}
+
+function endGame() {
+  cancelAnimationFrame(animationId);
+  clearInterval(heartInterval);
+  hearts.forEach(h => h.remove());
+  bullets.forEach(b => b.remove());
+  hearts = [];
+  bullets = [];
+  game.style.display = "none";
+  document.getElementById("winMessage").style.display = "flex";
+}
+
+function showValentine() {
+  document.getElementById("winMessage").style.display = "none";
+  document.getElementById("valentine").style.display = "flex";
+}
+
+function yes() {
+  document.getElementById("valentine").style.display = "none";
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById("confetti");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let pieces = [];
+  for (let i = 0; i < 200; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 6 + 4,
+      c: `hsl(${Math.random()*360},100%,50%)`,
+      s: Math.random() * 3 + 2
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.c;
+      ctx.fill();
+      p.y += p.s;
+      if (p.y > canvas.height) p.y = 0;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+</script>
+</body>
+</html>
 
